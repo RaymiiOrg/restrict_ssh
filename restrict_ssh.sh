@@ -13,25 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-allowed_commands=("ls" "ls -la" "w" "uptime" "pwd" "uname -a")
+declare -a allowed_commands=('^ls -[l|d|a]$' 'ls -la' 'w' 'uptime' 'pwd' 'uname -a') 
 orig="$SSH_ORIGINAL_COMMAND"
-logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: Sent SSH command: '$SSH_ORIGINAL_COMMAND'";
-logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Client: '$SSH_CLIENT'";
 logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Connection: '$SSH_CONNECTION'";
-logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Shell: '$SHELL'";
 logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Username: '$USER'";
+logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Client: '$SSH_CLIENT'";
+logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: Sent SSH command: '$SSH_ORIGINAL_COMMAND'";
+logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: SSH Shell: '$SHELL'";
 
-containsElement () {
+element_in_array () {
   local var
-  for var in "${@:2}"; do [[ "$var" == "$1" ]] && return 0; done
+  for var in "${@:2}"; do 
+    if [[ $1 =~ $var ]]; then
+        return 0; 
+    fi
+  done
   return 1
 }
 
-containsElement "$orig" "${allowed_commands[@]}"
+element_in_array "$orig" "${allowed_commands[@]}"
 command_allowed="$?"
 
 
-if [[ -e "$orig" ]]; then
+if [[ "$orig" == "" ]]; then
         logger -i -p local0.error -t "RESTRICTED_SSH" "ERROR: Interactive shell not allowed."
         echo "Interactive shell not allowed.";
         exit 1;
@@ -42,5 +46,6 @@ elif [[ $command_allowed -eq 0 ]]; then
 elif [[ $command_allowed -eq 1 ]]; then
         logger -i -p local0.error -t "RESTRICTED_SSH" "ERROR: Command \"$orig\" is not allowed."
         echo "Command \"$orig\" is not allowed."
-        exit 1;
+        exit 1
 fi
+    
