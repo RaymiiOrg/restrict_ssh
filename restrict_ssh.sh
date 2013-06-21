@@ -41,7 +41,7 @@ if [[ "$orig" == "" ]]; then
         exit 1;
 elif [[ $command_allowed -eq 0 ]]; then
         logger -i -p local0.info -t "RESTRICTED_SSH" "INFO: Command \"$orig\" is allowed."
-        $orig
+        eval "$orig"
         exit
 elif [[ $command_allowed -eq 1 ]]; then
         logger -i -p local0.error -t "RESTRICTED_SSH" "ERROR: Command \"$orig\" is not allowed."
